@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CasaCuidada - Gestão Inteligente de Manutenção Residencial",
+  title: "HomeCare - Gestão Inteligente de Manutenção Residencial",
   description: "Gerencie manutenções, reformas, contatos de profissionais e checklists periódicos da sua casa de forma simples e inteligente",
 };
 
@@ -27,12 +27,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <head>
         <Script src="/lasy-bridge.js" strategy="beforeInteractive" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
         {children}
       </body>

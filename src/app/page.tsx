@@ -38,7 +38,21 @@ import {
   Play,
   Quote,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ShoppingCart,
+  Package,
+  Zap,
+  Database,
+  Brain,
+  Target,
+  BarChart3,
+  HardDrive,
+  Users2,
+  Sparkles,
+  TrendingDown,
+  ArrowRight,
+  CheckCircle2,
+  XCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -80,6 +94,7 @@ interface Professional {
   region?: string;
   isPremium?: boolean;
   commissionRate?: number;
+  plan?: "bronze" | "prata" | "ouro";
 }
 
 interface ChecklistItem {
@@ -122,6 +137,16 @@ interface Video {
   views: string;
 }
 
+interface Service {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  priceRange: string;
+  commission: number;
+  icon: any;
+}
+
 export default function HomeCare() {
   const [activeTab, setActiveTab] = useState("home");
   const [searchTerm, setSearchTerm] = useState("");
@@ -136,6 +161,8 @@ export default function HomeCare() {
   const [houses, setHouses] = useState<House[]>([]);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  const [selectedPlan, setSelectedPlan] = useState<"basico" | "premium">("basico");
+  const [selectedBilling, setSelectedBilling] = useState<"mensal" | "anual">("mensal");
 
   // Dados de exemplo - inicializados apenas no cliente
   const [maintenances, setMaintenances] = useState<Maintenance[]>([]);
@@ -214,6 +241,64 @@ export default function HomeCare() {
     }
   ];
 
+  // Serviços do marketplace
+  const services: Service[] = [
+    {
+      id: "1",
+      name: "Limpeza Residencial",
+      category: "Limpeza",
+      description: "Limpeza completa da residência",
+      priceRange: "R$ 150 - R$ 400",
+      commission: 15,
+      icon: Sparkles
+    },
+    {
+      id: "2",
+      name: "Manutenção Elétrica",
+      category: "Elétrica",
+      description: "Instalação e reparos elétricos",
+      priceRange: "R$ 100 - R$ 500",
+      commission: 12,
+      icon: Zap
+    },
+    {
+      id: "3",
+      name: "Encanamento",
+      category: "Hidráulica",
+      description: "Reparos e instalações hidráulicas",
+      priceRange: "R$ 120 - R$ 600",
+      commission: 12,
+      icon: Wrench
+    },
+    {
+      id: "4",
+      name: "Pintura",
+      category: "Pintura",
+      description: "Pintura interna e externa",
+      priceRange: "R$ 800 - R$ 5000",
+      commission: 10,
+      icon: Building
+    },
+    {
+      id: "5",
+      name: "Dedetização",
+      category: "Limpeza",
+      description: "Controle de pragas e dedetização",
+      priceRange: "R$ 200 - R$ 800",
+      commission: 15,
+      icon: Shield
+    },
+    {
+      id: "6",
+      name: "Instalação de Pisos",
+      category: "Reforma",
+      description: "Instalação de pisos e revestimentos",
+      priceRange: "R$ 1500 - R$ 8000",
+      commission: 10,
+      icon: Package
+    }
+  ];
+
   useEffect(() => {
     setMounted(true);
     
@@ -283,7 +368,8 @@ export default function HomeCare() {
         jobs: 12,
         region: "Zona Sul - SP",
         isPremium: true,
-        commissionRate: 15
+        commissionRate: 15,
+        plan: "ouro"
       },
       {
         id: "2",
@@ -295,7 +381,8 @@ export default function HomeCare() {
         jobs: 8,
         region: "Zona Oeste - SP",
         isPremium: true,
-        commissionRate: 12
+        commissionRate: 12,
+        plan: "prata"
       },
       {
         id: "3",
@@ -317,7 +404,8 @@ export default function HomeCare() {
         jobs: 20,
         region: "Centro - SP",
         isPremium: true,
-        commissionRate: 10
+        commissionRate: 10,
+        plan: "bronze"
       },
       {
         id: "5",
@@ -329,7 +417,8 @@ export default function HomeCare() {
         jobs: 25,
         region: "Zona Sul - SP",
         isPremium: true,
-        commissionRate: 15
+        commissionRate: 15,
+        plan: "ouro"
       }
     ]);
 
@@ -487,6 +576,16 @@ export default function HomeCare() {
     return labels[status];
   };
 
+  const getPlanBadgeColor = (plan?: "bronze" | "prata" | "ouro") => {
+    if (!plan) return "";
+    const colors = {
+      bronze: "bg-orange-700 text-white",
+      prata: "bg-gray-400 text-gray-900",
+      ouro: "bg-amber-500 text-white"
+    };
+    return colors[plan];
+  };
+
   const urgentCount = maintenances.filter(m => m.priority === "urgente" || m.status === "atrasada").length;
   const pendingCount = maintenances.filter(m => m.status === "pendente").length;
   const inProgressCount = maintenances.filter(m => m.status === "em_andamento").length;
@@ -500,6 +599,12 @@ export default function HomeCare() {
   };
 
   const premiumPrice = calculatePremiumPrice(houses.length);
+
+  // Calcular preços dos planos
+  const basicMonthly = 14.90;
+  const premiumMonthly = 29.90;
+  const basicYearly = basicMonthly * 10; // 2 meses grátis
+  const premiumYearly = premiumMonthly * 10; // 2 meses grátis
 
   // Mostrar loading state enquanto não montou no cliente
   if (!mounted) {
@@ -600,26 +705,34 @@ export default function HomeCare() {
       <div className="container mx-auto px-4 py-6">
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7 lg:w-auto gap-1">
             <TabsTrigger value="home" className="gap-2">
               <Home className="w-4 h-4" />
               <span className="hidden sm:inline">Home</span>
             </TabsTrigger>
+            <TabsTrigger value="planos" className="gap-2">
+              <Crown className="w-4 h-4" />
+              <span className="hidden sm:inline">Planos</span>
+            </TabsTrigger>
+            <TabsTrigger value="marketplace" className="gap-2">
+              <ShoppingCart className="w-4 h-4" />
+              <span className="hidden sm:inline">Marketplace</span>
+            </TabsTrigger>
+            <TabsTrigger value="profissionais-pro" className="gap-2">
+              <Award className="w-4 h-4" />
+              <span className="hidden sm:inline">Profissionais</span>
+            </TabsTrigger>
+            <TabsTrigger value="ia" className="gap-2">
+              <Brain className="w-4 h-4" />
+              <span className="hidden sm:inline">IA</span>
+            </TabsTrigger>
+            <TabsTrigger value="leads" className="gap-2">
+              <Target className="w-4 h-4" />
+              <span className="hidden sm:inline">Leads</span>
+            </TabsTrigger>
             <TabsTrigger value="dashboard" className="gap-2">
               <TrendingUp className="w-4 h-4" />
               <span className="hidden sm:inline">Dashboard</span>
-            </TabsTrigger>
-            <TabsTrigger value="manutencoes" className="gap-2">
-              <Wrench className="w-4 h-4" />
-              <span className="hidden sm:inline">Manutenções</span>
-            </TabsTrigger>
-            <TabsTrigger value="profissionais" className="gap-2">
-              <Users className="w-4 h-4" />
-              <span className="hidden sm:inline">Profissionais</span>
-            </TabsTrigger>
-            <TabsTrigger value="checklist" className="gap-2">
-              <CheckSquare className="w-4 h-4" />
-              <span className="hidden sm:inline">Checklist</span>
             </TabsTrigger>
           </TabsList>
 
@@ -649,7 +762,7 @@ export default function HomeCare() {
                     size="lg" 
                     variant="outline"
                     className="text-lg px-8"
-                    onClick={() => setIsPremiumModalOpen(true)}
+                    onClick={() => setActiveTab("planos")}
                   >
                     <Crown className="w-5 h-5 mr-2" />
                     Ver Planos Premium
@@ -885,7 +998,807 @@ export default function HomeCare() {
             </section>
           </TabsContent>
 
-          {/* Dashboard Tab (conteúdo existente mantido) */}
+          {/* Planos Premium Tab */}
+          <TabsContent value="planos" className="space-y-8">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold mb-4">Escolha seu Plano</h2>
+              <p className="text-xl text-muted-foreground mb-8">
+                Desbloqueie recursos premium e gerencie sua casa com ainda mais eficiência
+              </p>
+              
+              {/* Toggle Mensal/Anual */}
+              <div className="flex items-center justify-center gap-4 mb-8">
+                <span className={selectedBilling === "mensal" ? "font-bold" : "text-muted-foreground"}>Mensal</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedBilling(selectedBilling === "mensal" ? "anual" : "mensal")}
+                  className="relative w-16 h-8"
+                >
+                  <div className={`absolute w-6 h-6 bg-blue-600 rounded-full transition-all ${
+                    selectedBilling === "anual" ? "right-1" : "left-1"
+                  }`} />
+                </Button>
+                <span className={selectedBilling === "anual" ? "font-bold" : "text-muted-foreground"}>
+                  Anual <Badge className="ml-2 bg-green-500">2 meses grátis</Badge>
+                </span>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+              {/* Plano Básico */}
+              <Card className="border-2 hover:shadow-xl transition-all">
+                <CardHeader>
+                  <div className="flex items-center justify-between mb-4">
+                    <CardTitle className="text-2xl">Básico</CardTitle>
+                    <Badge variant="outline">Popular</Badge>
+                  </div>
+                  <div className="mb-4">
+                    <span className="text-4xl font-bold">
+                      R$ {selectedBilling === "mensal" ? basicMonthly.toFixed(2) : (basicYearly / 12).toFixed(2)}
+                    </span>
+                    <span className="text-muted-foreground">/mês</span>
+                    {selectedBilling === "anual" && (
+                      <p className="text-sm text-green-600 mt-2">
+                        R$ {basicYearly.toFixed(2)}/ano (economize R$ {(basicMonthly * 2).toFixed(2)})
+                      </p>
+                    )}
+                  </div>
+                  <CardDescription>Perfeito para quem está começando</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Lembretes automáticos de manutenção</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Histórico de 6 meses</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Upload de até 50 fotos</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Checklist básico</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>1 casa</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <XCircle className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <span className="text-muted-foreground">Comparação de orçamentos</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <XCircle className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <span className="text-muted-foreground">Alertas de risco</span>
+                    </div>
+                  </div>
+                  <Button className="w-full" size="lg">
+                    Assinar Básico
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Plano Premium */}
+              <Card className="border-4 border-amber-500 hover:shadow-2xl transition-all relative">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                  <Badge className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 py-1">
+                    Recomendado
+                  </Badge>
+                </div>
+                <CardHeader>
+                  <div className="flex items-center justify-between mb-4">
+                    <CardTitle className="text-2xl flex items-center gap-2">
+                      <Crown className="w-6 h-6 text-amber-500" />
+                      Premium
+                    </CardTitle>
+                  </div>
+                  <div className="mb-4">
+                    <span className="text-4xl font-bold">
+                      R$ {selectedBilling === "mensal" ? premiumMonthly.toFixed(2) : (premiumYearly / 12).toFixed(2)}
+                    </span>
+                    <span className="text-muted-foreground">/mês</span>
+                    {selectedBilling === "anual" && (
+                      <p className="text-sm text-green-600 mt-2">
+                        R$ {premiumYearly.toFixed(2)}/ano (economize R$ {(premiumMonthly * 2).toFixed(2)})
+                      </p>
+                    )}
+                  </div>
+                  <CardDescription>Para quem quer o máximo de controle</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span className="font-medium">Tudo do Básico +</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Histórico completo ilimitado</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Upload ilimitado de fotos e documentos</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Checklist avançado personalizado</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Comparação de orçamentos</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Alertas de risco (mofo, infiltração, energia)</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Múltiplas casas (até 5)</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Suporte prioritário</span>
+                    </div>
+                  </div>
+                  <Button className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700" size="lg">
+                    Assinar Premium
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Comparação de Recursos */}
+            <div className="mt-16">
+              <h3 className="text-2xl font-bold text-center mb-8">Comparação Completa</h3>
+              <Card>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-muted">
+                        <tr>
+                          <th className="text-left p-4">Recurso</th>
+                          <th className="text-center p-4">Básico</th>
+                          <th className="text-center p-4">Premium</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        <tr>
+                          <td className="p-4">Lembretes automáticos</td>
+                          <td className="text-center p-4"><Check className="w-5 h-5 text-green-600 mx-auto" /></td>
+                          <td className="text-center p-4"><Check className="w-5 h-5 text-green-600 mx-auto" /></td>
+                        </tr>
+                        <tr>
+                          <td className="p-4">Histórico</td>
+                          <td className="text-center p-4">6 meses</td>
+                          <td className="text-center p-4">Ilimitado</td>
+                        </tr>
+                        <tr>
+                          <td className="p-4">Upload de fotos</td>
+                          <td className="text-center p-4">50 fotos</td>
+                          <td className="text-center p-4">Ilimitado</td>
+                        </tr>
+                        <tr>
+                          <td className="p-4">Número de casas</td>
+                          <td className="text-center p-4">1</td>
+                          <td className="text-center p-4">Até 5</td>
+                        </tr>
+                        <tr>
+                          <td className="p-4">Comparação de orçamentos</td>
+                          <td className="text-center p-4"><X className="w-5 h-5 text-gray-400 mx-auto" /></td>
+                          <td className="text-center p-4"><Check className="w-5 h-5 text-green-600 mx-auto" /></td>
+                        </tr>
+                        <tr>
+                          <td className="p-4">Alertas de risco</td>
+                          <td className="text-center p-4"><X className="w-5 h-5 text-gray-400 mx-auto" /></td>
+                          <td className="text-center p-4"><Check className="w-5 h-5 text-green-600 mx-auto" /></td>
+                        </tr>
+                        <tr>
+                          <td className="p-4">Suporte</td>
+                          <td className="text-center p-4">Email</td>
+                          <td className="text-center p-4">Prioritário</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Marketplace Tab */}
+          <TabsContent value="marketplace" className="space-y-8">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold mb-4">Marketplace de Serviços</h2>
+              <p className="text-xl text-muted-foreground">
+                Encontre profissionais qualificados para qualquer serviço
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {services.map((service) => {
+                const Icon = service.icon;
+                return (
+                  <Card key={service.id} className="hover:shadow-xl transition-all group">
+                    <CardHeader>
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-green-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <Icon className="w-6 h-6 text-white" />
+                        </div>
+                        <Badge variant="outline" className="text-xs">{service.category}</Badge>
+                      </div>
+                      <CardTitle className="text-lg mb-2">{service.name}</CardTitle>
+                      <CardDescription className="text-sm leading-relaxed">{service.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Faixa de preço</span>
+                        <span className="font-bold text-sm">{service.priceRange}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Comissão da plataforma</span>
+                        <Badge className="bg-green-500">{service.commission}%</Badge>
+                      </div>
+                      <Button className="w-full" variant="outline" size="sm">
+                        Ver Profissionais <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
+            {/* Como Funciona */}
+            <Card className="mt-12 bg-gradient-to-br from-blue-50 to-green-50 dark:from-blue-950/20 dark:to-green-950/20">
+              <CardHeader>
+                <CardTitle className="text-2xl">Como Funciona o Marketplace</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-3 gap-8">
+                  <div className="text-center">
+                    <div className="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                      1
+                    </div>
+                    <h3 className="font-bold mb-2">Escolha o Serviço</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Selecione o tipo de serviço que você precisa
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-16 h-16 rounded-full bg-green-600 text-white flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                      2
+                    </div>
+                    <h3 className="font-bold mb-2">Compare Profissionais</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Veja avaliações, preços e disponibilidade
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-16 h-16 rounded-full bg-amber-600 text-white flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                      3
+                    </div>
+                    <h3 className="font-bold mb-2">Agende e Pague</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Agende o serviço e pague com segurança
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Para Profissionais Tab */}
+          <TabsContent value="profissionais-pro" className="space-y-8">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold mb-4">Planos para Profissionais</h2>
+              <p className="text-xl text-muted-foreground">
+                Destaque seu perfil e receba mais clientes
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+              {/* Bronze */}
+              <Card className="border-2 border-orange-700 hover:shadow-xl transition-all">
+                <CardHeader>
+                  <div className="flex items-center justify-between mb-4">
+                    <CardTitle className="text-2xl">Bronze</CardTitle>
+                    <Badge className="bg-orange-700 text-white">Básico</Badge>
+                  </div>
+                  <div className="mb-4">
+                    <span className="text-4xl font-bold">R$ 39,90</span>
+                    <span className="text-muted-foreground">/mês</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Perfil destacado</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Até 10 reviews</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Link para WhatsApp</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Aparece em buscas</span>
+                    </div>
+                  </div>
+                  <Button className="w-full" variant="outline">
+                    Assinar Bronze
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Prata */}
+              <Card className="border-4 border-gray-400 hover:shadow-2xl transition-all relative">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                  <Badge className="bg-gray-400 text-gray-900 px-4 py-1">
+                    Popular
+                  </Badge>
+                </div>
+                <CardHeader>
+                  <div className="flex items-center justify-between mb-4">
+                    <CardTitle className="text-2xl">Prata</CardTitle>
+                    <Badge className="bg-gray-400 text-gray-900">Intermediário</Badge>
+                  </div>
+                  <div className="mb-4">
+                    <span className="text-4xl font-bold">R$ 79,90</span>
+                    <span className="text-muted-foreground">/mês</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span className="font-medium">Tudo do Bronze +</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Reviews ilimitados</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Agenda de serviços integrada</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Selo de verificado</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Prioridade em buscas</span>
+                    </div>
+                  </div>
+                  <Button className="w-full">
+                    Assinar Prata
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Ouro */}
+              <Card className="border-4 border-amber-500 hover:shadow-2xl transition-all">
+                <CardHeader>
+                  <div className="flex items-center justify-between mb-4">
+                    <CardTitle className="text-2xl flex items-center gap-2">
+                      <Crown className="w-6 h-6 text-amber-500" />
+                      Ouro
+                    </CardTitle>
+                    <Badge className="bg-amber-500 text-white">Premium</Badge>
+                  </div>
+                  <div className="mb-4">
+                    <span className="text-4xl font-bold">R$ 149,90</span>
+                    <span className="text-muted-foreground">/mês</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span className="font-medium">Tudo do Prata +</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Destaque no topo das buscas</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Badge "Profissional Premium"</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Sugestão automática para clientes</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Comissão reduzida (10%)</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Suporte prioritário 24/7</span>
+                    </div>
+                  </div>
+                  <Button className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700">
+                    Assinar Ouro
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Benefícios */}
+            <Card className="mt-12">
+              <CardHeader>
+                <CardTitle className="text-2xl">Por que se tornar um Profissional Premium?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="flex gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center flex-shrink-0">
+                      <TrendingUp className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold mb-2">Mais Visibilidade</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Apareça no topo das buscas e receba mais solicitações de clientes
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-green-600 flex items-center justify-center flex-shrink-0">
+                      <Star className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold mb-2">Credibilidade</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Selos e badges que aumentam a confiança dos clientes
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-amber-600 flex items-center justify-center flex-shrink-0">
+                      <DollarSign className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold mb-2">Comissões Menores</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Planos premium pagam menos comissão por serviço realizado
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-purple-600 flex items-center justify-center flex-shrink-0">
+                      <Calendar className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold mb-2">Gestão Facilitada</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Ferramentas de agenda e gestão de clientes integradas
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* IA Premium Tab */}
+          <TabsContent value="ia" className="space-y-8">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold mb-4">Automação com IA</h2>
+              <p className="text-xl text-muted-foreground">
+                Inteligência artificial para gerenciar sua casa
+              </p>
+            </div>
+
+            {/* Recursos de IA */}
+            <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+              <Card className="hover:shadow-xl transition-all">
+                <CardHeader>
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center mb-4">
+                    <Brain className="w-6 h-6 text-white" />
+                  </div>
+                  <CardTitle>Diagnóstico por Foto</CardTitle>
+                  <CardDescription>
+                    Tire uma foto do problema e a IA identifica e sugere soluções
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button className="w-full" variant="outline">
+                    Experimentar <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="hover:shadow-xl transition-all">
+                <CardHeader>
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center mb-4">
+                    <DollarSign className="w-6 h-6 text-white" />
+                  </div>
+                  <CardTitle>Estimativa de Custos</CardTitle>
+                  <CardDescription>
+                    IA calcula estimativa precisa de custos de reparos
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button className="w-full" variant="outline">
+                    Experimentar <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="hover:shadow-xl transition-all">
+                <CardHeader>
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-600 to-emerald-600 flex items-center justify-center mb-4">
+                    <CheckSquare className="w-6 h-6 text-white" />
+                  </div>
+                  <CardTitle>Checklist Automático</CardTitle>
+                  <CardDescription>
+                    IA gera checklist personalizado baseado na sua casa
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button className="w-full" variant="outline">
+                    Experimentar <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="hover:shadow-xl transition-all">
+                <CardHeader>
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-600 to-orange-600 flex items-center justify-center mb-4">
+                    <Building className="w-6 h-6 text-white" />
+                  </div>
+                  <CardTitle>Sugestão de Reformas</CardTitle>
+                  <CardDescription>
+                    IA analisa sua casa e sugere melhorias com ROI
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button className="w-full" variant="outline">
+                    Experimentar <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Planos de Créditos */}
+            <div className="max-w-5xl mx-auto">
+              <h3 className="text-2xl font-bold text-center mb-8">Pacotes de Créditos</h3>
+              <div className="grid md:grid-cols-3 gap-6">
+                <Card className="hover:shadow-xl transition-all">
+                  <CardHeader>
+                    <CardTitle>50 Créditos</CardTitle>
+                    <CardDescription>Para uso ocasional</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="text-3xl font-bold">R$ 12,00</div>
+                    <ul className="space-y-2 text-sm">
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        50 análises de IA
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        Válido por 3 meses
+                      </li>
+                    </ul>
+                    <Button className="w-full" variant="outline">Comprar</Button>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-2 border-blue-600 hover:shadow-xl transition-all">
+                  <CardHeader>
+                    <Badge className="w-fit mb-2">Melhor Custo-Benefício</Badge>
+                    <CardTitle>200 Créditos</CardTitle>
+                    <CardDescription>Para uso regular</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="text-3xl font-bold">R$ 29,00</div>
+                    <ul className="space-y-2 text-sm">
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        200 análises de IA
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        Válido por 6 meses
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        Economia de 40%
+                      </li>
+                    </ul>
+                    <Button className="w-full">Comprar</Button>
+                  </CardContent>
+                </Card>
+
+                <Card className="hover:shadow-xl transition-all">
+                  <CardHeader>
+                    <CardTitle>Ilimitado</CardTitle>
+                    <CardDescription>Uso sem limites</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="text-3xl font-bold">R$ 49,00<span className="text-sm font-normal text-muted-foreground">/mês</span></div>
+                    <ul className="space-y-2 text-sm">
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        Análises ilimitadas
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        Prioridade no processamento
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        Recursos exclusivos
+                      </li>
+                    </ul>
+                    <Button className="w-full" variant="outline">Assinar</Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Leads Tab */}
+          <TabsContent value="leads" className="space-y-8">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold mb-4">Sistema de Leads</h2>
+              <p className="text-xl text-muted-foreground">
+                Conecte clientes com profissionais qualificados
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+              {/* Para Profissionais */}
+              <Card className="hover:shadow-xl transition-all">
+                <CardHeader>
+                  <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center mb-4">
+                    <Target className="w-6 h-6 text-white" />
+                  </div>
+                  <CardTitle>Para Profissionais</CardTitle>
+                  <CardDescription>Receba leads qualificados de clientes</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="font-medium">Leads Qualificados</div>
+                        <div className="text-sm text-muted-foreground">Clientes prontos para contratar</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="font-medium">Preço por Lead</div>
+                        <div className="text-sm text-muted-foreground">R$ 5 a R$ 20 por lead</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="font-medium">Filtros Personalizados</div>
+                        <div className="text-sm text-muted-foreground">Escolha região e tipo de serviço</div>
+                      </div>
+                    </div>
+                  </div>
+                  <Button className="w-full">
+                    Começar a Receber Leads
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Para Plataforma */}
+              <Card className="hover:shadow-xl transition-all">
+                <CardHeader>
+                  <div className="w-12 h-12 rounded-xl bg-green-600 flex items-center justify-center mb-4">
+                    <BarChart3 className="w-6 h-6 text-white" />
+                  </div>
+                  <CardTitle>Monetização de Leads</CardTitle>
+                  <CardDescription>Como a plataforma ganha</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="font-medium">Venda de Leads</div>
+                        <div className="text-sm text-muted-foreground">Cada lead é vendido para 3-5 profissionais</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="font-medium">Leads Exclusivos</div>
+                        <div className="text-sm text-muted-foreground">Profissionais premium podem comprar exclusividade</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="font-medium">Qualificação Automática</div>
+                        <div className="text-sm text-muted-foreground">IA qualifica leads antes de vender</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg">
+                    <div className="text-sm text-muted-foreground mb-1">Potencial de receita</div>
+                    <div className="text-2xl font-bold text-green-600">R$ 15k - R$ 50k/mês</div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Exemplos de Leads */}
+            <Card className="max-w-5xl mx-auto">
+              <CardHeader>
+                <CardTitle>Exemplos de Leads Recentes</CardTitle>
+                <CardDescription>Veja o tipo de solicitação que você pode receber</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="p-4 border rounded-lg hover:bg-accent/50 transition-colors">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h4 className="font-bold">Troca de Piso - Sala e Cozinha</h4>
+                        <p className="text-sm text-muted-foreground">Zona Sul - SP • Orçamento: R$ 3.000 - R$ 5.000</p>
+                      </div>
+                      <Badge className="bg-green-500">Qualificado</Badge>
+                    </div>
+                    <p className="text-sm mb-2">Cliente quer trocar piso de 40m² por porcelanato. Urgência média.</p>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span>Valor do lead: R$ 15</span>
+                      <span>•</span>
+                      <span>3 profissionais interessados</span>
+                    </div>
+                  </div>
+
+                  <div className="p-4 border rounded-lg hover:bg-accent/50 transition-colors">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h4 className="font-bold">Pintura Externa Completa</h4>
+                        <p className="text-sm text-muted-foreground">Zona Oeste - SP • Orçamento: R$ 4.000 - R$ 7.000</p>
+                      </div>
+                      <Badge className="bg-amber-500">Alta Urgência</Badge>
+                    </div>
+                    <p className="text-sm mb-2">Casa de 200m² precisa de pintura externa completa. Cliente quer começar em 2 semanas.</p>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span>Valor do lead: R$ 20</span>
+                      <span>•</span>
+                      <span>5 profissionais interessados</span>
+                    </div>
+                  </div>
+
+                  <div className="p-4 border rounded-lg hover:bg-accent/50 transition-colors">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h4 className="font-bold">Instalação de Ar Condicionado</h4>
+                        <p className="text-sm text-muted-foreground">Centro - SP • Orçamento: R$ 1.500 - R$ 2.500</p>
+                      </div>
+                      <Badge className="bg-green-500">Qualificado</Badge>
+                    </div>
+                    <p className="text-sm mb-2">Cliente já comprou 2 aparelhos split, precisa apenas de instalação.</p>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span>Valor do lead: R$ 10</span>
+                      <span>•</span>
+                      <span>4 profissionais interessados</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Dashboard Tab (mantido do original) */}
           <TabsContent value="dashboard" className="space-y-4">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -1008,7 +1921,14 @@ export default function HomeCare() {
                           {pro.name.charAt(0)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium truncate">{pro.name}</h4>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-medium truncate">{pro.name}</h4>
+                            {pro.plan && (
+                              <Badge className={getPlanBadgeColor(pro.plan)}>
+                                {pro.plan}
+                              </Badge>
+                            )}
+                          </div>
                           <p className="text-xs text-muted-foreground">{pro.specialty}</p>
                         </div>
                         <div className="text-right">
@@ -1025,9 +1945,6 @@ export default function HomeCare() {
               </Card>
             </div>
           </TabsContent>
-
-          {/* Outras tabs mantidas conforme original... */}
-          {/* (Manutenções, Profissionais, Checklist) */}
         </Tabs>
       </div>
 
@@ -1042,7 +1959,7 @@ export default function HomeCare() {
               <Button 
                 variant="link" 
                 className="h-auto p-0"
-                onClick={() => setIsPremiumModalOpen(true)}
+                onClick={() => setActiveTab("planos")}
               >
                 Premium
               </Button>
@@ -1050,6 +1967,59 @@ export default function HomeCare() {
           </div>
         </div>
       </footer>
+
+      {/* Modais */}
+      <Dialog open={isPremiumModalOpen} onOpenChange={setIsPremiumModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-2xl">
+              <Crown className="w-6 h-6 text-amber-500" />
+              Seja Premium
+            </DialogTitle>
+            <DialogDescription>
+              Desbloqueie recursos avançados e gerencie sua casa com ainda mais eficiência
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Button 
+              className="w-full" 
+              size="lg"
+              onClick={() => {
+                setIsPremiumModalOpen(false);
+                setActiveTab("planos");
+              }}
+            >
+              Ver Planos Premium
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isProfessionalSignupOpen} onOpenChange={setIsProfessionalSignupOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-2xl">
+              <Briefcase className="w-6 h-6 text-green-600" />
+              Cadastro de Profissional
+            </DialogTitle>
+            <DialogDescription>
+              Junte-se à nossa rede de profissionais qualificados
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Button 
+              className="w-full" 
+              size="lg"
+              onClick={() => {
+                setIsProfessionalSignupOpen(false);
+                setActiveTab("profissionais-pro");
+              }}
+            >
+              Ver Planos para Profissionais
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
